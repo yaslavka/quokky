@@ -12,6 +12,10 @@ export const getAccessToken = async () => {
   }
 };
 
+export const formatter = new Intl.NumberFormat('ru-RU', {
+  style: 'currency',
+  currency: 'RUB',
+});
 export const setAccessToken = async ({access_token}) => {
   await AsyncStorage.setItem('access_token', access_token);
 };

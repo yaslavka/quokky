@@ -15,7 +15,7 @@ export const colors = {
     grey3: '#86939e',
     grey4: '#bdc6cf',
     grey5: '#e1e8ee',
-    grey6:  "#eeeeee",
+    grey6:  "#a0a0a0",
     grey7:  "#F2f9f9",
     grey10: "#d6d6d6",
     CardComment : '#86939e',
@@ -37,12 +37,53 @@ export const rideData =[
     {street:"179 8th Ave",area:"Bezuidenhout Valley,Johannesburg",id:"4"},
 ];
 
-export const filterData = [ {name:"Ride",image: require('../assets/ride.png'), id:"0"},
+export const filterData = [
+    {name:"Ride",image: require('../assets/ride.png'), id:"0"},
     {name:"Food",image:require("../assets/food.png"),id:"1"},
     {name:"Package",image:require("../assets/package.png"),id:"2"},
     {name:"Reserve",image:require("../assets/reserve.png"),id:"3"}
 
 ];
+
+export const COLORS = {
+    // base colors
+    primary: "#FC6D3F", // orange
+    secondary: "#CDCDD2",   // gray
+
+    // colors
+    black: "#1E1F20",
+    white: "#FFFFFF",
+
+    lightGray: "#F5F5F6",
+    lightGray2: "#F6F6F7",
+    lightGray3: "#EFEFF1",
+    lightGray4: "#F8F8F9",
+    transparent: "transparent",
+    darkgray: '#898C95',
+};
+export const SIZES = {
+    // global sizes
+    base: 8,
+    font: 14,
+    radius: 30,
+    padding: 10,
+    padding2: 12,
+
+    // font sizes
+    largeTitle: 50,
+    h1: 30,
+    h2: 22,
+    h3: 20,
+    h4: 18,
+    body1: 30,
+    body2: 20,
+    body3: 16,
+    body4: 14,
+    body5: 12,
+
+    // app dimensions
+
+};
 export const carsAround = [{latitude:-26.207487,longitude:28.236226},
     {latitude:-26.202616,longitude:28.227718},
     {latitude:-26.202424,longitude:28.236612},

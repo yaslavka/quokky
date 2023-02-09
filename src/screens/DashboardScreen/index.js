@@ -6,7 +6,6 @@ import {
     SafeAreaView,
     ScrollView,
     Image,
-    Alert,
     TouchableOpacity,
     RefreshControl, Dimensions, FlatList, StatusBar,
 } from 'react-native';
@@ -15,20 +14,21 @@ import {api} from '../../api';
 import * as actions from '../../actions/app.actions';
 import {useRef, useState} from 'react';
 import HomeHeader from "../../Components/HomeHeader";
-import {carsAround, colors, filterData, parameters} from "../../styles";
+import {colors, filterData} from "../../styles";
 import {useTranslation} from "react-i18next";
 import Svg, {Path} from "react-native-svg";
 import {useNavigation} from "@react-navigation/native";
 import MapView, {Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import {mapStyle} from "../../styles/mapStyle";
 const SCREEN_WIDTH = Dimensions.get('window').width
+import Geolocation from 'react-native-geolocation-service';
 function DashboardScreen(){
     const navigation = useNavigation()
     const {t} = useTranslation('common');
     const userInfo = useSelector(state => state.app.user);
     const dispatch = useDispatch();
     const [refresh, setRefresh] = useState(false);
-    const _map = useRef(1);
+    const _map = useRef();
     const onRefresh = async () => {
         try {
             setRefresh(true);
@@ -37,31 +37,34 @@ function DashboardScreen(){
             setRefresh(false);
         }
     };
-    const [delyvery, setDelyvery]=useState(true)
+
+    const [delyvery, setDelyvery]=useState({
+        destinationCords:{
+            bearing:98.37700653076172,
+            time:1675800639291,
+            speed:0.3584126830101013,
+            accuracy:19.086999893188477,
+            longitude:53.7849283,
+            latitude:56.4525269,
+            altitude:79.80000305175781,
+            provider:"fused"
+        }
+    })
+    Geolocation.getCurrentPosition(
+        (position) => {
+           setDelyvery({destinationCords: position.coords});
+        },
+        (error) => {
+            // See error code charts below.
+            console.log(error.code, error.message);
+        },
+        { enableHighAccuracy: true, timeout: 1000, maximumAge: 10000 }
+    );
+    const {  destinationCords } = delyvery
+
     return(
         <SafeAreaView style={styles.container}>
             <HomeHeader navigation={navigation}/>
-            {/*<View style={{flexDirection:"row", justifyContent: "space-evenly", alignItems: "center"}}>*/}
-            {/*    <View style={{flexDirection:"row", marginTop: 5, backgroundColor: colors.delay, borderRadius: 15, borderColor:colors.placeholder, borderWidth: 2, paddingVertical: 5, paddingHorizontal: 40}}>*/}
-            {/*        <View style={{flexDirection:"row", alignItems: "center", paddingLeft: 10}}>*/}
-            {/*            <Svg fill="#335616" width={30} height={30}*/}
-            {/*                 focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="FmdGoodIcon"*/}
-            {/*                 tabIndex="-1" title="FmdGood">*/}
-            {/*                <Path fill="#335616" d="M12 2c-4.2 0-8 3.22-8 8.2 0 3.32 2.67 7.25 8 11.8 5.33-4.55 8-8.48 8-11.8C20 5.22 16.2 2 12 2zm0 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>*/}
-            {/*            </Svg>*/}
-            {/*            <Text style={styles.textcolor}>{t('gjfghhjf')}</Text>*/}
-            {/*        </View>*/}
-            {/*        <View style={{flexDirection:"row", alignItems: "center", marginLeft: 20, backgroundColor: colors.menu, borderRadius: 5, paddingHorizontal: 5}}>*/}
-            {/*            <Svg*/}
-            {/*                fill="#335616" width={30} height={30}*/}
-            {/*                focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="HistoryToggleOffIcon"*/}
-            {/*                tabIndex="-1" title="HistoryToggleOff">*/}
-            {/*                <Path d="m15.1 19.37 1 1.74c-.96.44-2.01.73-3.1.84v-2.02c.74-.09 1.44-.28 2.1-.56zM4.07 13H2.05c.11 1.1.4 2.14.84 3.1l1.74-1c-.28-.66-.47-1.36-.56-2.1zM15.1 4.63l1-1.74c-.96-.44-2-.73-3.1-.84v2.02c.74.09 1.44.28 2.1.56zM19.93 11h2.02c-.11-1.1-.4-2.14-.84-3.1l-1.74 1c.28.66.47 1.36.56 2.1zM8.9 19.37l-1 1.74c.96.44 2.01.73 3.1.84v-2.02c-.74-.09-1.44-.28-2.1-.56zM11 4.07V2.05c-1.1.11-2.14.4-3.1.84l1 1.74c.66-.28 1.36-.47 2.1-.56zm7.36 3.1 1.74-1.01c-.63-.87-1.4-1.64-2.27-2.27l-1.01 1.74c.59.45 1.1.96 1.54 1.54zM4.63 8.9l-1.74-1c-.44.96-.73 2-.84 3.1h2.02c.09-.74.28-1.44.56-2.1zm15.3 4.1c-.09.74-.28 1.44-.56 2.1l1.74 1c.44-.96.73-2.01.84-3.1h-2.02zm-3.1 5.36 1.01 1.74c.87-.63 1.64-1.4 2.27-2.27l-1.74-1.01c-.45.59-.96 1.1-1.54 1.54zM7.17 5.64l-1-1.75c-.88.64-1.64 1.4-2.27 2.28l1.74 1.01c.44-.59.95-1.1 1.53-1.54zM5.64 16.83l-1.74 1c.63.87 1.4 1.64 2.27 2.27l1.01-1.74c-.59-.44-1.1-.95-1.54-1.53zM13 7h-2v5.41l4.29 4.29 1.41-1.41-3.7-3.7V7z"/>*/}
-            {/*            </Svg>*/}
-            {/*            <Text style={styles.textcolor}>{t('gjfghhjf')}</Text>*/}
-            {/*        </View>*/}
-            {/*    </View>*/}
-            {/*</View>*/}
             <ScrollView
                 style={{width: "100%", height: "100%"}}
                 bounces={false}
@@ -74,9 +77,9 @@ function DashboardScreen(){
                     <View style ={styles.view1}>
                         <View  style ={styles.view8}>
                             <Text style ={styles.text2}>Read a book.Take a nap. Stare out the window</Text>
-                            <TouchableOpacity onPress ={()=>{navigation.navigate("RequestScreen",{state:0})}}>
+                            <TouchableOpacity onPress ={()=>{navigation.navigate("DestinationScreen")}}>
                                 <View style ={styles.button1}>
-                                    <Text style = {styles.button1Text}>Delivery Quokky</Text>
+                                    <Text style = {styles.button1Text}>Заказать</Text>
                                 </View>
                             </TouchableOpacity>
                         </View>
@@ -133,21 +136,16 @@ function DashboardScreen(){
                         customMapStyle ={mapStyle}
                         showsUserLocation ={true}
                         followsUserLocation = {true}
-                        initialRegion = {{...carsAround[0],latitudeDelta:0.008,longitudeDelta:0.008}}
+                        initialRegion = {{...destinationCords,   latitudeDelta: 0.0922, longitudeDelta: 0.0421}}
 
                     >
-                        {carsAround.map((item,index)=>
-                            <Marker coordinate = {item} key= {index.toString()}>
-                                <Image
-                                    source = {require('../../assets/carMarker.png')}
-                                    style ={styles.carsAround}
-                                    resizeMode = "cover"
-                                />
-                            </Marker>
-
-                        )
-
-                        }
+                        <Marker coordinate = {destinationCords}>
+                            <Image
+                                source = {require('../../assets/carMarker.png')}
+                                style ={styles.carsAround}
+                                resizeMode = "cover"
+                            />
+                        </Marker>
 
                     </MapView>
                 </View>

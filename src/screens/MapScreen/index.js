@@ -2,184 +2,281 @@ import React, {useCallback, useContext, useEffect, useMemo, useRef, useState} fr
 import {
     View,
     Text,
-    SafeAreaView,
     StyleSheet,
-    ScrollView,
     TouchableOpacity,
     Dimensions,
     FlatList,
-    Image
+    Image, Platform, ScrollView
 } from 'react-native'
-import HomeHeader from "../../Components/HomeHeader";
 import {colors, parameters, rideData} from "../../styles";
 import {useTranslation} from "react-i18next";
 import Svg, {Path} from "react-native-svg";
 import {useNavigation} from "@react-navigation/native";
-import {DestinationContext, OriginContext} from "../../contexts/contexts";
 import {Button} from "@rneui/base";
-import MapComponent from "../../Components/MapComponent";
-import {Avatar, Icon} from "@rneui/themed";
-
+import {Avatar} from "@rneui/themed";
+import Geolocation from 'react-native-geolocation-service';
+import {useSelector} from "react-redux";
+import MapView, {PROVIDER_DEFAULT, PROVIDER_GOOGLE, Marker} from "react-native-maps";
+import MapViewDirections from 'react-native-maps-directions';
+import {GOOGLE_MAP_KEY} from "../../constants/googleMapKey";
+import {mapStyle} from "../../styles/mapStyle";
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SCREEN_WIDTH = Dimensions.get('window').width;
-function MapScreen({route}){
-    const {origin,dispatchOrigin} = useContext(OriginContext)
-    const [userOrigin,setUserOrigin] = useState({latitude:origin.latitude, longitude:origin.longitude})
-    const {destination,dispatchDestination} = useContext(DestinationContext)
-    const [userDestination,setUserDestination] = useState({latitude:destination.latitude, longitude:destination.longitude})
-    const [delyvery, setDelyvery]=useState(false)
-    const {t} = useTranslation('common');
-    const navigation = useNavigation()
-    const bottomsheet1 =useRef(1)  ;
-
+import avatar from '../../assets/images/icons/camera_200.png';
+import {GooglePlacesAutocomplete} from "react-native-google-places-autocomplete";
+function MapScreen(){
+    const GOOGLE_MAPS_APIKEY="AIzaSyA5tTXA1HWY3Jd-MBieJisz_LMva01xo60"
+    const navigation =useNavigation()
+    const {t} = useTranslation('common')
+    const userInfo = useSelector(state => state.app.user);
     const snapPoints1 = useMemo(()=>['70%'],[])
     const handleSheetChange1  = useCallback((index)=>{},[])
-    useEffect(()=>{
-        setUserOrigin({latitude:origin.latitude,
-            longitude:origin.longitude});
-        setUserDestination({latitude:destination.latitude,
-            longitude:destination.longitude})
-    },[origin,destination])
-    const renderFlatListItems = useCallback(({item})=>(
-        <View>
-            <View style ={styles.view10}>
-                <View style ={styles.view11}>
-                    <Icon
-                        type ="material-community"
-                        name ="clock-time-four"
-                        color ={colors.white}
-                        size ={18}
-                    />
-                </View>
-                <View>
-                    <Text style ={{fontSize:15,color:colors.grey1}}>{item.street}</Text>
-                    <Text style ={{color:colors.grey4}}>{item.area}</Text>
-                </View>
-            </View>
-        </View>
-    ),[])
+    const ref = useRef()
+    const refs = useRef()
+    const markerRef = useRef()
+    const [location, setLocation] = useState({
+        origin:{
+
+            latitude: 37.78825,
+            longitude: -122.4324,
+
+        },
+        distance:{}
+    })
+    const {origin, distance} = location
+
+    Geolocation.getCurrentPosition(
+        (position) => {
+            setLocation({origin: position.coords, distance:position.coords });
+        },
+        (error) => {
+            // See error code charts below.
+            console.log(error.code, error.message);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+    useEffect(() => {
+        refs.current?.setAddressText('');
+    }, []);
+
     return(
-        <View style ={styles.container}>
-            <View style ={styles.view1}>
-                <Icon
-                    type ="material-community"
-                    name ="arrow-left"
-                    color ={colors.grey1}
-                    size ={32}
-                />
-            </View>
-            <View style = {styles.view2}>
-                <TouchableOpacity>
-                    <View style ={styles.view3}>
-                        <Avatar
-                            rounded
-                            avatarStyle ={{}}
-                            size ={30}
-                            source = {require('../../assets/blankProfilePic.jpg')}
-                        />
-                        <Text style ={{marginLeft:5}}>For Someone</Text>
-                        <Icon
-                            type ="material-community"
-                            name ="chevron-down"
-                            color ={colors.grey1}
-                            size ={26}
-                        />
-                    </View>
-                </TouchableOpacity>
-                <View style ={styles.view4}>
-                    <View>
-                        <Image
-                            style = {styles.image1}
-                            source ={require("../../assets/transit.png")}
-                        />
-                    </View>
-                    <View>
-                        <TouchableOpacity onPress ={()=>navigation.navigate("DestinationScreen")}>
-                            <View style = {styles.view6}>
-                                <Text style ={styles.text1}>From where</Text>
-                            </View>
-                        </TouchableOpacity>
-                        <View style ={styles.view7}>
+        <>
+            {userInfo && (
+                <>
+                    <View style ={styles.container}>
+                        <View style ={styles.view1}>
+                            <TouchableOpacity onPress ={()=>navigation.goBack()}>
+                                <Svg fill="#335616" width={30} height={30}
+                                     focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="ArrowBackIcon" tabIndex="-1"
+                                     title="ArrowBack">
+                                    <Path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                                </Svg>
+                            </TouchableOpacity>
+                        </View>
+                        <View style = {styles.view2}>
                             <TouchableOpacity>
-                                <View style ={styles.view5}>
-                                    <Text style ={styles.text10}>...</Text>
+                                <View style ={styles.view3}>
+                                    <Avatar
+                                        rounded
+                                        avatarStyle ={{borderRadius:50}}
+                                        size ={30}
+                                        source = {
+                                            userInfo.avatar
+                                                ?{
+                                                    uri: `https://kosmoss.host/api/user/${userInfo.avatar}`,
+                                                }:require('../../assets/blankProfilePic.jpg')
+                                        }
+                                    />
+                                    <Text style ={{marginLeft:5, color:'black'}}>For Someone</Text>
+                                    <Svg fill="#335616" width={30} height={30}
+                                         focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="KeyboardArrowDownIcon"
+                                         tabIndex="-1" title="KeyboardArrowDown">
+                                        <Path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                                    </Svg>
                                 </View>
                             </TouchableOpacity>
-                            <View style ={styles.view8}>
-                                <Icon
-                                    type ="material-community"
-                                    name ="plus-thick"
-                                    color ={colors.black}
-                                    size ={25}
+                            <View style ={styles.view4}>
+                                {/*<View>*/}
+                                {/*    <Image*/}
+                                {/*        style = {styles.image1}*/}
+                                {/*        source ={require("../../assets/transit.png")}*/}
+                                {/*    />*/}
+                                {/*</View>*/}
+                                <ScrollView
+
+                                    style={{flex: 1,  backgroundColor: '#fff', }}>
+                                    <>
+                                        < >
+                                            <GooglePlacesAutocomplete
+                                                ref={refs}
+                                                placeholder={`${t('Адрес')}`}
+                                                query ={{
+                                                    key:GOOGLE_MAPS_APIKEY,
+                                                    language:"en"
+                                                }}
+                                                minLength ={2}
+                                                fetchDetails ={true}
+                                                autoFocus ={false}
+                                                styles = {autoComplete}
+                                                debounce ={400}
+                                                onPress={(data, detail = null)=>{
+                                                    setLocation({...location, origin: {
+                                                            latitude: detail.geometry.location.lat,
+                                                            longitude: detail.geometry.location.lng
+                                                        }})
+                                                }}
+                                            />
+                                        </>
+                                        <View style ={styles.view7}>
+                                            <GooglePlacesAutocomplete
+                                                ref={refs}
+                                                placeholder={`${t('Адрес')}`}
+                                                query ={{
+                                                    key:GOOGLE_MAPS_APIKEY,
+                                                    language:"en"
+                                                }}
+                                                minLength ={2}
+                                                fetchDetails ={true}
+                                                autoFocus ={false}
+                                                styles = {autoComplet}
+                                                debounce ={400}
+                                                onPress={(data, detail = null)=>{
+                                                    setLocation({...location, distance: {
+                                                            latitude: detail.geometry.location.lat,
+                                                            longitude: detail.geometry.location.lng
+                                                        }})
+                                                }}
+                                            />
+                                            {/*<View style ={styles.view8}>*/}
+                                            {/*    <Svg fill="#335616" width={30} height={30}*/}
+                                            {/*         focusable="false" aria-hidden="true" viewBox="0 0 24 24"*/}
+                                            {/*         data-testid="LocalHospitalIcon" tabIndex="-1" title="LocalHospital">*/}
+                                            {/*        <Path*/}
+                                            {/*            d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/>*/}
+                                            {/*    </Svg>*/}
+                                            {/*</View>*/}
+                                        </View>
+                                    </>
+                                </ScrollView>
+
+                            </View>
+                        </View>
+                        <MapView
+                            ref={ref}
+                            initialRegion = {{...origin,   latitudeDelta: 0.0922, longitudeDelta: 0.0421}}
+                            customMapStyle ={mapStyle}
+                            style={styles.map}
+                            provider ={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
+                            showsUserLocation ={true}
+                            followsUserLocation = {true}
+                        >
+                            <Marker ref={markerRef}
+                                coordinate={{...origin,   latitudeDelta: 0.0922, longitudeDelta: 0.0421}}
+
+                            >
+                                <Image
+                                    style={{width: 30, height:30, borderRadius: 50}}
+                                    source={
+                                        userInfo?.avatar
+                                            ?{uri:`https://kosmoss.host/api/user/${userInfo?.avatar}`,}
+                                            :avatar
+                                    }/>
+                            </Marker>
+
+                            {Object.keys(distance).length > 0 && (
+                                <Marker ref={markerRef}
+                                        coordinate={{...distance, latitudeDelta: 0.0922, longitudeDelta: 0.0421}}
+
+                                >
+                                    <Image source={
+                                        userInfo?.avatar
+                                            ?{uri:`https://kosmoss.host/api/user/${userInfo?.avatar}`,}
+                                            :avatar
+                                    }/>
+
+                                </Marker>
+                            )}
+                            {Object.keys(distance).length > 0 && (
+                                <MapViewDirections
+                                    optimizeWaypoints={true}
+                                    origin={{...origin,   latitudeDelta: 0.0922, longitudeDelta: 0.0421}}
+                                    destination={{...distance, latitudeDelta: 0.0922, longitudeDelta: 0.0421}}
+                                    apikey={GOOGLE_MAP_KEY}
+                                    strokeWidth={3}
+                                    strokeColor="red"
+                                    onStart={(params) => {
+                                        console.log(`Started routing between "${params.origin}" and "${params.destination}"`);
+
+                                    }}
                                 />
-                            </View>
-                        </View>
+                            )}
+                        </MapView>
+
+
                     </View>
-
-                </View>
-            </View>
-            <MapComponent userOrigin ={userOrigin} userDestination = {userDestination} />
-            <Button
-                ref={bottomsheet1}
-                index={route.params}
-                snapPoints = {snapPoints1}
-                onChange={handleSheetChange1}
-
-            >
-                <FlatList
-                    keyboardShouldPersistTaps = 'always'
-                    data={rideData}
-                    keyExtractor = {item=>item.id}
-                    renderItem={renderFlatListItems}
-                    contentContainerStyle ={styles.contentContainer}
-                    ListHeaderComponent={<View style ={styles.view10}>
-                        <View style ={styles.view11}>
-                            <Icon
-                                type ="material-community"
-                                name ="star"
-                                color ={colors.white}
-                                size ={20}
-                            />
-                        </View>
-                        <View>
-                            <Text style ={styles.text9}>Saved Places</Text>
-                        </View>
-                    </View>}
-                    ListFooterComponent={
-                        <View>
-                            <View style ={styles.view10}>
-                                <View style ={styles.view11}>
-                                    <Icon
-                                        type ="material-community"
-                                        name ="map-marker"
-                                        color ={colors.white}
-                                        size ={20}
-                                    />
-                                </View>
-                                <View>
-                                    <Text style ={styles.text9}>Set location on map</Text>
-                                </View>
-                            </View>
-                            <View style ={styles.view10}>
-                                <View style ={styles.view11}>
-                                    <Icon
-                                        type ="material-community"
-                                        name ="skip-next"
-                                        color ={colors.white}
-                                        size ={20}
-                                    />
-                                </View>
-                                <View>
-                                    <Text style ={styles.text9}>Enter destination later</Text>
-                                </View>
-                            </View>
-                        </View>
-                    }
-                />
-            </Button>
-        </View>
+                </>
+            )}
+        </>
     )
 }
+const autoComplete = {
+
+    textInput:{
+        color: 'black',
+        height: 50,
+        borderRadius: 5,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        fontSize: 15,
+        flex: 1,
+        borderWidth:1,
+        marginHorizontal:15,
+
+    },
+    container: {
+        paddingTop:8,
+        flex: 1,
+        color: 'black',
+
+
+    },
+
+    textInputContainer: {
+        flexDirection: 'row',
+        color: 'black',
+
+    },
+
+}
+const autoComplet = {
+
+    textInput:{
+        color: 'black',
+        height: 50,
+        borderRadius: 5,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        fontSize: 15,
+        flex: 1,
+        borderWidth:1,
+        marginHorizontal:15,
+
+    },
+    container: {
+        paddingTop:8,
+        flex: 1,
+
+
+    },
+
+    textInputContainer: {
+        color: 'black',
+        flexDirection: 'row',
+
+    },
+
+}
+
 const styles = StyleSheet.create({
     container1:{flex:1,
         paddingTop:parameters.statusBarHeight,
@@ -213,7 +310,7 @@ const styles = StyleSheet.create({
     },
 
     view2:{
-        height:SCREEN_HEIGHT*0.21,
+        height:SCREEN_HEIGHT*0.31,
         alignItems:"center",
         zIndex: 5,
         backgroundColor:colors.white
@@ -260,11 +357,11 @@ const styles = StyleSheet.create({
     image1:{  height:70,
         width:30,
         marginRight:10,
-        marginTop:10
+        marginTop:10,
     },
     view7:{
         flexDirection:"row",
-        alignItems:"center"
+        alignItems:"center",
     },
     view8:{
         marginLeft:10
@@ -488,10 +585,9 @@ const styles = StyleSheet.create({
     },
 
 
-    map:{
-        marginVertical: 0,
-        width:SCREEN_WIDTH,
-        zIndex: -1
+    map: {
+        height: "100%",
+        width: "100%"
     },
 
     centeredView: {

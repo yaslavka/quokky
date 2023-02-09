@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
         flex:1,
     },
     textcolor:{
-        color: 'rgb(159,198,79)'
+        color: 'rgb(236,239,232)'
     },
     avatar:{
         borderWidth: 4,

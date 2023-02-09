@@ -15,6 +15,7 @@ import {useTranslation} from 'react-i18next';
 import Header from "../../Components/Header";
 import {Button} from "@rneui/themed";
 import {colors} from "../../styles";
+import Svg, {Path} from "react-native-svg";
 
 function SignUpScreen() {
   const {t} = useTranslation('common');

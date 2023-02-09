@@ -6,7 +6,7 @@ import {store} from '../../index';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const baseInstance = axios.create({
-  baseURL: 'http://192.168.0.125:5000/api',
+  baseURL: 'https://kosmoss.host/api',
 });
 baseInstance.interceptors.request.use(
   async config => {
@@ -49,7 +49,8 @@ export const api = {
   async getUserInfo() {
     return await baseInstance.get('/user');
   },
-    async getLocations(data) {
-        return await baseInstance.post('/user/location', data);
+    async getZakaz(data) {
+      console.log(data)
+        return await baseInstance.post('/user/zakaz', data);
     },
 };
