@@ -7,23 +7,31 @@ import {
     ScrollView,
     Image,
     TouchableOpacity,
-    RefreshControl, Dimensions, FlatList, StatusBar,
+    RefreshControl,
+    Dimensions,
+    FlatList,
+    StatusBar,
+    Platform,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {api} from '../../api';
 import * as actions from '../../actions/app.actions';
 import {useRef, useState} from 'react';
-import HomeHeader from "../../Components/HomeHeader";
-import {colors, filterData} from "../../styles";
-import {useTranslation} from "react-i18next";
-import Svg, {Path} from "react-native-svg";
-import {useNavigation} from "@react-navigation/native";
-import MapView, {Marker, PROVIDER_GOOGLE} from "react-native-maps";
-import {mapStyle} from "../../styles/mapStyle";
-const SCREEN_WIDTH = Dimensions.get('window').width
+import HomeHeader from '../../Components/HomeHeader';
+import {colors, filterData} from '../../styles';
+import {useTranslation} from 'react-i18next';
+import Svg, {Path} from 'react-native-svg';
+import {useNavigation} from '@react-navigation/native';
+import MapView, {
+    Marker,
+    PROVIDER_DEFAULT,
+    PROVIDER_GOOGLE,
+} from 'react-native-maps';
+import {mapStyle} from '../../styles/mapStyle';
+const SCREEN_WIDTH = Dimensions.get('window').width;
 import Geolocation from 'react-native-geolocation-service';
-function DashboardScreen(){
-    const navigation = useNavigation()
+function DashboardScreen() {
+    const navigation = useNavigation();
     const {t} = useTranslation('common');
     const userInfo = useSelector(state => state.app.user);
     const dispatch = useDispatch();
@@ -38,149 +46,185 @@ function DashboardScreen(){
         }
     };
 
-    const [delyvery, setDelyvery]=useState({
-        destinationCords:{
-            bearing:98.37700653076172,
-            time:1675800639291,
-            speed:0.3584126830101013,
-            accuracy:19.086999893188477,
-            longitude:53.7849283,
-            latitude:56.4525269,
-            altitude:79.80000305175781,
-            provider:"fused"
-        }
-    })
-    Geolocation.getCurrentPosition(
-        (position) => {
-           setDelyvery({destinationCords: position.coords});
+    const [delyvery, setDelyvery] = useState({
+        destinationCords: {
+            bearing: 98.37700653076172,
+            time: 1675800639291,
+            speed: 0.3584126830101013,
+            accuracy: 19.086999893188477,
+            longitude: 53.7849283,
+            latitude: 56.4525269,
+            altitude: 79.80000305175781,
+            provider: 'fused',
         },
-        (error) => {
+    });
+    Geolocation.getCurrentPosition(
+        position => {
+            setDelyvery({destinationCords: position.coords});
+        },
+        error => {
             // See error code charts below.
             console.log(error.code, error.message);
         },
-        { enableHighAccuracy: true, timeout: 1000, maximumAge: 10000 }
+        {enableHighAccuracy: true, timeout: 1000, maximumAge: 10000},
     );
-    const {  destinationCords } = delyvery
+    const {destinationCords} = delyvery;
 
-    return(
+    return (
         <SafeAreaView style={styles.container}>
-            <HomeHeader navigation={navigation}/>
+            <HomeHeader navigation={navigation} />
             <ScrollView
-                style={{width: "100%", height: "100%"}}
+                style={{width: '100%', height: '100%'}}
                 bounces={false}
                 refreshControl={
                     <RefreshControl refreshing={refresh} onRefresh={onRefresh} />
-                }
-            >
-                <View style ={styles.home}>
-                    <Text style = {styles.text1}>Доставка по всей Германии</Text>
-                    <View style ={styles.view1}>
-                        <View  style ={styles.view8}>
-                            <Text style ={styles.text2}>Read a book.Take a nap. Stare out the window</Text>
-                            <TouchableOpacity onPress ={()=>{navigation.navigate("DestinationScreen")}}>
-                                <View style ={styles.button1}>
-                                    <Text style = {styles.button1Text}>Заказать</Text>
+                }>
+                <View style={styles.home}>
+                    <Text style={styles.text1}>Доставка по всей Германии</Text>
+                    <View style={styles.view1}>
+                        <View style={styles.view8}>
+                            <Text style={styles.text2}>
+                                Read a book.Take a nap. Stare out the window
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    navigation.navigate('DestinationScreen');
+                                }}>
+                                <View style={styles.button1}>
+                                    <Text style={styles.button1Text}>Заказать</Text>
                                 </View>
                             </TouchableOpacity>
                         </View>
                         <View>
                             <Image
-                                style ={styles.image1}
-                                source = {require('../../assets/uberCar.png')}
+                                style={styles.image1}
+                                source={require('../../assets/uberCar.png')}
                             />
                         </View>
                     </View>
                 </View>
                 <View>
-
                     <FlatList
-                        numRows ={4}
-                        horizontal = {true}
-                        showsHorizontalScrollIndicator ={false}
-                        data ={filterData}
-                        keyExtractor = {(item)=>item.id}
-                        renderItem = { ({item})=>(
-                            <View style = {styles.card}>
-                                <View style ={styles.view2}>
-                                    <Image style ={styles.image2} source = {item.image} />
+                        numRows={4}
+                        horizontal={true}
+                        showsHorizontalScrollIndicator={false}
+                        data={filterData}
+                        keyExtractor={item => item.id}
+                        renderItem={({item}) => (
+                            <View style={styles.card}>
+                                <View style={styles.view2}>
+                                    <Image style={styles.image2} source={item.image} />
                                 </View>
                                 <View>
-                                    <Text style ={styles.title}>{item.name}</Text>
+                                    <Text style={styles.title}>{item.name}</Text>
                                 </View>
                             </View>
                         )}
                     />
                 </View>
-                <View style ={styles.view3}>
-                    <Text style ={styles.text3}> Where to ?</Text>
-                    <View style ={styles.view4}>
+                <View style={styles.view3}>
+                    <Text style={styles.text3}> Where to ?</Text>
+                    <View style={styles.view4}>
                         <Svg
-                            fill="#335616" width={30} height={30}
-                            focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="HistoryToggleOffIcon"
-                            tabIndex="-1" title="HistoryToggleOff">
-                            <Path d="m15.1 19.37 1 1.74c-.96.44-2.01.73-3.1.84v-2.02c.74-.09 1.44-.28 2.1-.56zM4.07 13H2.05c.11 1.1.4 2.14.84 3.1l1.74-1c-.28-.66-.47-1.36-.56-2.1zM15.1 4.63l1-1.74c-.96-.44-2-.73-3.1-.84v2.02c.74.09 1.44.28 2.1.56zM19.93 11h2.02c-.11-1.1-.4-2.14-.84-3.1l-1.74 1c.28.66.47 1.36.56 2.1zM8.9 19.37l-1 1.74c.96.44 2.01.73 3.1.84v-2.02c-.74-.09-1.44-.28-2.1-.56zM11 4.07V2.05c-1.1.11-2.14.4-3.1.84l1 1.74c.66-.28 1.36-.47 2.1-.56zm7.36 3.1 1.74-1.01c-.63-.87-1.4-1.64-2.27-2.27l-1.01 1.74c.59.45 1.1.96 1.54 1.54zM4.63 8.9l-1.74-1c-.44.96-.73 2-.84 3.1h2.02c.09-.74.28-1.44.56-2.1zm15.3 4.1c-.09.74-.28 1.44-.56 2.1l1.74 1c.44-.96.73-2.01.84-3.1h-2.02zm-3.1 5.36 1.01 1.74c.87-.63 1.64-1.4 2.27-2.27l-1.74-1.01c-.45.59-.96 1.1-1.54 1.54zM7.17 5.64l-1-1.75c-.88.64-1.64 1.4-2.27 2.28l1.74 1.01c.44-.59.95-1.1 1.53-1.54zM5.64 16.83l-1.74 1c.63.87 1.4 1.64 2.27 2.27l1.01-1.74c-.59-.44-1.1-.95-1.54-1.53zM13 7h-2v5.41l4.29 4.29 1.41-1.41-3.7-3.7V7z"/>
+                            fill="#335616"
+                            width={30}
+                            height={30}
+                            focusable="false"
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            data-testid="HistoryToggleOffIcon"
+                            tabIndex="-1"
+                            title="HistoryToggleOff">
+                            <Path d="m15.1 19.37 1 1.74c-.96.44-2.01.73-3.1.84v-2.02c.74-.09 1.44-.28 2.1-.56zM4.07 13H2.05c.11 1.1.4 2.14.84 3.1l1.74-1c-.28-.66-.47-1.36-.56-2.1zM15.1 4.63l1-1.74c-.96-.44-2-.73-3.1-.84v2.02c.74.09 1.44.28 2.1.56zM19.93 11h2.02c-.11-1.1-.4-2.14-.84-3.1l-1.74 1c.28.66.47 1.36.56 2.1zM8.9 19.37l-1 1.74c.96.44 2.01.73 3.1.84v-2.02c-.74-.09-1.44-.28-2.1-.56zM11 4.07V2.05c-1.1.11-2.14.4-3.1.84l1 1.74c.66-.28 1.36-.47 2.1-.56zm7.36 3.1 1.74-1.01c-.63-.87-1.4-1.64-2.27-2.27l-1.01 1.74c.59.45 1.1.96 1.54 1.54zM4.63 8.9l-1.74-1c-.44.96-.73 2-.84 3.1h2.02c.09-.74.28-1.44.56-2.1zm15.3 4.1c-.09.74-.28 1.44-.56 2.1l1.74 1c.44-.96.73-2.01.84-3.1h-2.02zm-3.1 5.36 1.01 1.74c.87-.63 1.64-1.4 2.27-2.27l-1.74-1.01c-.45.59-.96 1.1-1.54 1.54zM7.17 5.64l-1-1.75c-.88.64-1.64 1.4-2.27 2.28l1.74 1.01c.44-.59.95-1.1 1.53-1.54zM5.64 16.83l-1.74 1c.63.87 1.4 1.64 2.27 2.27l1.01-1.74c-.59-.44-1.1-.95-1.54-1.53zM13 7h-2v5.41l4.29 4.29 1.41-1.41-3.7-3.7V7z" />
                         </Svg>
                         <Text style={styles.textcolor}>{t('Now')}</Text>
-                        <Svg fill="#335616" width={30} height={30}
-                             focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="FmdGoodIcon"
-                             tabIndex="-1" title="FmdGood">
-                            <Path fill="#335616" d="M12 2c-4.2 0-8 3.22-8 8.2 0 3.32 2.67 7.25 8 11.8 5.33-4.55 8-8.48 8-11.8C20 5.22 16.2 2 12 2zm0 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                        <Svg
+                            fill="#335616"
+                            width={30}
+                            height={30}
+                            focusable="false"
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            data-testid="FmdGoodIcon"
+                            tabIndex="-1"
+                            title="FmdGood">
+                            <Path
+                                fill="#335616"
+                                d="M12 2c-4.2 0-8 3.22-8 8.2 0 3.32 2.67 7.25 8 11.8 5.33-4.55 8-8.48 8-11.8C20 5.22 16.2 2 12 2zm0 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"
+                            />
                         </Svg>
                     </View>
                 </View>
-                <View style ={{alignItems:"center",justifyContent:"center"}}>
+                <View style={{alignItems: 'center', justifyContent: 'center'}}>
                     <MapView
-                        ref = {_map}
-                        provider ={PROVIDER_GOOGLE}
-                        style = {styles.map}
-                        customMapStyle ={mapStyle}
-                        showsUserLocation ={true}
-                        followsUserLocation = {true}
-                        initialRegion = {{...destinationCords,   latitudeDelta: 0.0922, longitudeDelta: 0.0421}}
-
-                    >
-                        <Marker coordinate = {destinationCords}>
+                        ref={_map}
+                        provider={
+                            Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT
+                        }
+                        style={styles.map}
+                        customMapStyle={mapStyle}
+                        showsUserLocation={true}
+                        followsUserLocation={true}
+                        initialRegion={{
+                            ...destinationCords,
+                            latitudeDelta: 0.0922,
+                            longitudeDelta: 0.0421,
+                        }}>
+                        <Marker coordinate={destinationCords}>
                             <Image
-                                source = {require('../../assets/carMarker.png')}
-                                style ={styles.carsAround}
-                                resizeMode = "cover"
+                                source={require('../../assets/carMarker.png')}
+                                style={styles.carsAround}
+                                resizeMode="cover"
                             />
                         </Marker>
-
                     </MapView>
                 </View>
             </ScrollView>
-            <StatusBar style ="light" backgroundColor = {colors.placeholder} translucent ={true} />
+            <StatusBar
+                style="light"
+                backgroundColor={colors.placeholder}
+                translucent={true}
+            />
             <View style={styles.mapButton}>
-                <TouchableOpacity onPress={()=>{navigation.navigate('Map')}}>
-                    <Svg fill="#335616" width={30} height={30}
-                         focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="FmdGoodIcon"
-                         tabIndex="-1" title="FmdGood">
-                        <Path fill="#335616" d="M12 2c-4.2 0-8 3.22-8 8.2 0 3.32 2.67 7.25 8 11.8 5.33-4.55 8-8.48 8-11.8C20 5.22 16.2 2 12 2zm0 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.navigate('Map');
+                    }}>
+                    <Svg
+                        fill="#335616"
+                        width={30}
+                        height={30}
+                        focusable="false"
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        data-testid="FmdGoodIcon"
+                        tabIndex="-1"
+                        title="FmdGood">
+                        <Path
+                            fill="#335616"
+                            d="M12 2c-4.2 0-8 3.22-8 8.2 0 3.32 2.67 7.25 8 11.8 5.33-4.55 8-8.48 8-11.8C20 5.22 16.2 2 12 2zm0 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"
+                        />
                     </Svg>
                     <Text style={styles.textcolor}>{t('Map')}</Text>
                 </TouchableOpacity>
             </View>
-
         </SafeAreaView>
-    )
+    );
 }
 const styles = StyleSheet.create({
-    container:{
+    container: {
         flex: 1,
-        backgroundColor:colors.white,
-
+        backgroundColor: colors.white,
     },
-    delyvery:{
+    delyvery: {
         paddingHorizontal: 50,
         borderRadius: 15,
-        paddingVertical: 10
-
+        paddingVertical: 10,
     },
-    textcolor:{
-        color: 'rgb(159,198,79)'
+    textcolor: {
+        color: 'rgb(159,198,79)',
     },
-    mapButton:{
+    mapButton: {
         position: 'absolute',
         bottom: 10,
         right: 15,
@@ -189,167 +233,137 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        alignItems:'center'
+        alignItems: 'center',
     },
-    image1:{
-
-        height:100,
-        width:100,
-
+    image1: {
+        height: 100,
+        width: 100,
     },
 
-    image2:{height:60,width:60,
-        borderRadius:30,
+    image2: {height: 60, width: 60, borderRadius: 30},
+
+    home: {
+        backgroundColor: colors.placeholder,
+        paddingLeft: 20,
     },
 
-    home:{
-        backgroundColor:colors.placeholder,
-        paddingLeft:20,
-
+    text1: {
+        color: colors.white,
+        fontSize: 21,
+        paddingBottom: 20,
+        paddingTop: 20,
     },
 
-    text1:{
-        color:colors.white,
-        fontSize:21,
-        paddingBottom:20,
-        paddingTop:20
+    text2: {
+        color: colors.white,
+        fontSize: 16,
     },
 
-    text2:{
-        color:colors.white,
-        fontSize:16
+    view1: {
+        flexDirection: 'row',
+        flex: 1,
+        paddingTop: 30,
     },
 
-    view1:{
-        flexDirection:"row",
-        flex:1,
-        paddingTop:30
+    button1: {
+        height: 40,
+        width: 150,
+        backgroundColor: colors.black,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 20,
     },
 
-    button1:{
-        height:40,
-        width:150,
-        backgroundColor:colors.black,
-        borderRadius:20,
-        alignItems:"center",
-        justifyContent:"center",
-        marginTop:20
+    button1Text: {
+        color: colors.white,
+        fontSize: 17,
+        marginTop: -2,
+    },
+    card: {
+        alignItems: 'center',
+        margin: SCREEN_WIDTH / 22,
     },
 
-    button1Text:{
-        color:colors.white,
-        fontSize:17,
-        marginTop:-2
+    view2: {marginBottom: 5, borderRadius: 15, backgroundColor: colors.grey6},
 
+    title: {
+        color: colors.black,
+        fontSize: 16,
     },
-    card:{
-        alignItems:"center",
-        margin:SCREEN_WIDTH/22
+    view3: {
+        flexDirection: 'row',
+        marginTop: 5,
+        height: 50,
+        backgroundColor: colors.grey6,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginHorizontal: 15,
+    },
+    text3: {marginLeft: 15, fontSize: 20, color: colors.black},
 
-    },
-
-    view2:{marginBottom:5,
-        borderRadius:15,
-        backgroundColor:colors.grey6
-    },
-
-    title:{
-        color:colors.black,
-        fontSize:16
-    },
-    view3:{flexDirection:"row",
-        marginTop :5,
-        height:50,
-        backgroundColor:colors.grey6,
-        alignItems:"center",
-        justifyContent:"space-between",
-        marginHorizontal:15
-
-    },
-    text3:{marginLeft:15,
-        fontSize:20,
-        color:colors.black
+    view4: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 15,
+        backgroundColor: 'white',
+        paddingHorizontal: 10,
+        paddingVertical: 2,
+        borderRadius: 20,
     },
 
-    view4:{ flexDirection:"row",
-        alignItems:"center",
-        marginRight:15,
-        backgroundColor:"white",
-        paddingHorizontal:10,
-        paddingVertical:2,
-        borderRadius:20
+    view5: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'white',
+        paddingVertical: 25,
+        justifyContent: 'space-between',
+        marginHorizontal: 15,
+        borderBottomColor: colors.grey4,
+        borderBottomWidth: 1,
+        flex: 1,
     },
 
-    view5:{ flexDirection:"row",
-        alignItems:"center",
-        backgroundColor:"white",
-        paddingVertical:25,
-        justifyContent:"space-between",
-        marginHorizontal:15,
-        borderBottomColor:colors.grey4,
-        borderBottomWidth:1,
-        flex:1
+    view6: {
+        alignItems: 'center',
+        flex: 5,
+        flexDirection: 'row',
+    },
+    view7: {
+        backgroundColor: colors.grey6,
+        height: 40,
+        width: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 20,
     },
 
-    view6:{
-
-
-        alignItems:"center",
-        flex:5,
-        flexDirection:"row"
-    },
-    view7:{
-        backgroundColor:colors.grey6,
-        height:40,
-        width:40,
-        borderRadius:20,
-        alignItems:"center",
-        justifyContent:"center",
-        marginRight:20
-
-    },
-
-    map:{
-
+    map: {
         height: 150,
         marginVertical: 0,
-        width:SCREEN_WIDTH*0.92
+        width: SCREEN_WIDTH * 0.92,
     },
 
-    text4:{ fontSize:20,
-        color:colors.black,
-        marginLeft:20,
-        marginBottom:20
-    },
+    text4: {fontSize: 20, color: colors.black, marginLeft: 20, marginBottom: 20},
 
-    icon1:  {marginLeft:10,
-        marginTop:5
-    },
+    icon1: {marginLeft: 10, marginTop: 5},
 
-    view8: {flex:4,
-        marginTop:-25
-    } ,
+    view8: {flex: 4, marginTop: -25},
     carsAround: {
         width: 28,
         height: 14,
-
     },
 
     location: {
         width: 16,
         height: 16,
-        borderRadius:8,
-        backgroundColor:colors.blue,
-        alignItems:"center",
-        justifyContent:"center"
-
+        borderRadius: 8,
+        backgroundColor: colors.blue,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
-    view9:{width:4,
-        height:4,
-        borderRadius:2,
-        backgroundColor:"white"
-    }
-
-})
+    view9: {width: 4, height: 4, borderRadius: 2, backgroundColor: 'white'},
+});
 export default DashboardScreen;
