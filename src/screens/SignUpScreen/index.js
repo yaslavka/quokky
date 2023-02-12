@@ -1,8 +1,10 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {isValidEmail, isValidPassword, isValidPhone} from '../../utils';
 import {
-  Image, SafeAreaView,
+  Image,
+  Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,10 +14,11 @@ import {
 import Background from '../../assets/images/splash.png';
 import {api} from '../../api';
 import {useTranslation} from 'react-i18next';
-import Header from "../../Components/Header";
-import {Button} from "@rneui/themed";
-import {colors} from "../../styles";
-import Svg, {Path} from "react-native-svg";
+import Header from '../../Components/Header';
+import {Button} from '@rneui/themed';
+import {colors} from '../../styles';
+import Geolocation from 'react-native-geolocation-service';
+import {PermissionsAndroid} from 'react-native';
 
 function SignUpScreen() {
   const {t} = useTranslation('common');
@@ -29,8 +32,19 @@ function SignUpScreen() {
     email: '',
     password: '',
     repeatPassword: '',
+    latitude: null,
+    longitude: null,
   });
-  const {first_name, last_name, phone, email, password, repeatPassword} = state;
+  const {
+    first_name,
+    last_name,
+    phone,
+    email,
+    password,
+    repeatPassword,
+    longitude,
+    latitude,
+  } = state;
   const errors = {};
   if (repeatPassword !== password) {
     errors.repeatPassword = `${t(
@@ -56,9 +70,61 @@ function SignUpScreen() {
   const handleOnchanges = (text, input) => {
     setState(prevState => ({...prevState, [input]: text}));
   };
+
+  const getCurrentLocation = () =>
+    new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition(
+        position => {
+          setState({
+            ...state,
+            longitude: position.coords.longitude,
+            latitude: position.coords.latitude,
+          });
+        },
+        error => {
+          reject(error.message);
+        },
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      );
+    });
+  const locationPermission = () =>
+    new Promise(async (resolve, reject) => {
+      if (Platform.OS === 'ios') {
+        try {
+          const permissionStatus = await Geolocation.requestAuthorization(
+            'whenInUse',
+          );
+          if (permissionStatus === 'granted') {
+            return resolve('granted');
+          }
+          reject('Permission not granted');
+        } catch (error) {
+          return reject(error);
+        }
+      }
+      return PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      )
+        .then(granted => {
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            resolve('granted');
+          }
+          return reject('Location Permission denied');
+        })
+        .catch(error => {
+          return reject(error);
+        });
+    });
+
+  useEffect(() => {
+    getCurrentLocation();
+    locationPermission();
+  }, []);
   const handleOnSubmit = () => {
     setSignUpStatus('progress');
     setServerError(null);
+    getCurrentLocation();
+    locationPermission();
     api
       .signUp({
         first_name: first_name,
@@ -66,7 +132,8 @@ function SignUpScreen() {
         phone: phone,
         email: email,
         password: password,
-        user: user
+        latitude: latitude,
+        longitude: longitude,
       })
       .then(() => {
         setSignUpStatus('successful');
@@ -76,117 +143,113 @@ function SignUpScreen() {
         setSignUpStatus('failed');
       });
   };
+
   // TODO: refactoring
   if (signUpStatus === 'successful') {
     return navigation.navigate('Auth');
   }
+
   return (
     <SafeAreaView style={styles.container}>
-     <Header/>
+      <Header />
       <Image source={Background} style={{width: 120, height: 120}} />
-      <ScrollView style={{width: '100%', height:"100%"}}>
+      <ScrollView style={{width: '100%', height: '100%'}}>
         <View>
           <View>
             <TextInput
-                placeholderTextColor={colors.placeholder}
-                style={styles.TextInput}
-                onChangeText={text => handleOnchanges(text, 'first_name')}
-                placeholder={t(
-                    'signInPage.signUpPage.inputs.firstName.placeholder',
-                )}
+              placeholderTextColor={colors.placeholder}
+              style={styles.TextInput}
+              onChangeText={text => handleOnchanges(text, 'first_name')}
+              placeholder={t(
+                'signInPage.signUpPage.inputs.firstName.placeholder',
+              )}
             />
-            {errors && (
-                <Text style={styles.label}>{errors.first_name}</Text>
-            )}
+            {errors && <Text style={styles.label}>{errors.first_name}</Text>}
           </View>
           <View>
             <TextInput
-                placeholderTextColor={colors.placeholder}
-                style={styles.TextInput}
-                onChangeText={text => handleOnchanges(text, 'last_name')}
-                placeholder={t(
-                    'signInPage.signUpPage.inputs.lastName.placeholder',
-                )}
+              placeholderTextColor={colors.placeholder}
+              style={styles.TextInput}
+              onChangeText={text => handleOnchanges(text, 'last_name')}
+              placeholder={t(
+                'signInPage.signUpPage.inputs.lastName.placeholder',
+              )}
             />
             {errors && <Text style={styles.label}>{errors.last_name}</Text>}
           </View>
           <View>
             <TextInput
-                placeholderTextColor={colors.placeholder}
-                style={styles.TextInput}
-                onChangeText={text => handleOnchanges(text, 'phone')}
-                placeholder={t(
-                    'signInPage.signUpPage.inputs.phone.placeholder',
-                )}
+              placeholderTextColor={colors.placeholder}
+              style={styles.TextInput}
+              onChangeText={text => handleOnchanges(text, 'phone')}
+              placeholder={t('signInPage.signUpPage.inputs.phone.placeholder')}
             />
             {errors && <Text style={styles.label}>{errors.phone}</Text>}
           </View>
           <View>
             <TextInput
-                placeholderTextColor={colors.placeholder}
-                style={styles.TextInput}
-                onChangeText={text => handleOnchanges(text, 'email')}
-                placeholder={t(
-                    'signInPage.signUpPage.inputs.email.placeholder',
-                )}
+              placeholderTextColor={colors.placeholder}
+              style={styles.TextInput}
+              onChangeText={text => handleOnchanges(text, 'email')}
+              placeholder={t('signInPage.signUpPage.inputs.email.placeholder')}
             />
             {errors && <Text style={styles.label}>{errors.email}</Text>}
           </View>
           <View style={styles.TextInputPassword}>
             <TextInput
-                placeholderTextColor={colors.placeholder}
-                style={{width: '100%', color:colors.input, paddingLeft: 10}}
-                onChangeText={text => handleOnchanges(text, 'password')}
-                secureTextEntry={true}
-                placeholder={t(
-                    'signInPage.signUpPage.inputs.password.placeholder',
-                )}
+              placeholderTextColor={colors.placeholder}
+              style={{width: '100%', color: colors.input, paddingLeft: 10}}
+              onChangeText={text => handleOnchanges(text, 'password')}
+              secureTextEntry={true}
+              placeholder={t(
+                'signInPage.signUpPage.inputs.password.placeholder',
+              )}
             />
           </View>
           {errors && <Text style={styles.label}>{errors.password}</Text>}
           <View style={styles.TextInputPassword}>
             <TextInput
-                placeholderTextColor={colors.placeholder}
-                style={{width: '100%', color:colors.input, paddingLeft: 10}}
-                onChangeText={text => handleOnchanges(text, 'repeatPassword')}
-                secureTextEntry={true}
-                placeholder={t(
-                    'signInPage.signUpPage.inputs.repeatPassword.placeholder',
-                )}
+              placeholderTextColor={colors.placeholder}
+              style={{width: '100%', color: colors.input, paddingLeft: 10}}
+              onChangeText={text => handleOnchanges(text, 'repeatPassword')}
+              secureTextEntry={true}
+              placeholder={t(
+                'signInPage.signUpPage.inputs.repeatPassword.placeholder',
+              )}
             />
           </View>
-          {errors && (
-              <Text style={styles.label}>{errors.repeatPassword}</Text>
-          )}
+          {errors && <Text style={styles.label}>{errors.repeatPassword}</Text>}
         </View>
         <View style={{marginTop: 20}}>
           <Button
-              onPress={handleOnSubmit}
-              disabled={
-                repeatPassword !== password ||
-                !phone ||
-                !first_name ||
-                !email ||
-                !last_name ||
-                password < 8
-              }
-              block
-              buttonStyle={[styles.TextInput, {backgroundColor: 'rgb(70,85,31)'}]}
-              title={t('signInPage.signUpPage.buttons.signUp')}
+            onPress={handleOnSubmit}
+            disabled={
+              repeatPassword !== password ||
+              !phone ||
+              !first_name ||
+              !email ||
+              !last_name ||
+              password < 8
+            }
+            block
+            buttonStyle={[styles.TextInput, {backgroundColor: 'rgb(70,85,31)'}]}
+            title={t('signInPage.signUpPage.buttons.signUp')}
           />
         </View>
         {serverError && <Text style={styles.label}>{serverError}</Text>}
-        <View style={{alignItems:"flex-start", paddingLeft: 20}}>
-          <Text style={styles.label}>{t('signInPage.signUpPage.links.signIn')}</Text>
+        <View style={{alignItems: 'flex-start', paddingLeft: 20}}>
+          <Text style={styles.label}>
+            {t('signInPage.signUpPage.links.signIn')}
+          </Text>
         </View>
-        <View style={{alignItems: "flex-end", marginHorizontal: 1}}>
+        <View style={{alignItems: 'flex-end', marginHorizontal: 1}}>
           <Button
-              onPress={() => {
-                navigation.navigate('Auth');
-              }}
-              block
-              buttonStyle={[styles.TextInput, {backgroundColor: 'rgb(70,85,31)'}]}
-              title={t('signInPage.signUpPage.links.signIn')}
+            onPress={() => {
+              navigation.navigate('Auth');
+            }}
+            block
+            buttonStyle={[styles.TextInput, {backgroundColor: 'rgb(70,85,31)'}]}
+            title={t('signInPage.signUpPage.links.signIn')}
           />
         </View>
       </ScrollView>
@@ -194,31 +257,31 @@ function SignUpScreen() {
   );
 }
 const styles = StyleSheet.create({
-  container:{
+  container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  TextInput:{
+  TextInput: {
     borderWidth: 1,
     borderColor: 'rgb(70,85,31)',
-    borderRadius:12,
+    borderRadius: 12,
     marginHorizontal: 20,
     marginBottom: 20,
     color: colors.input,
-    paddingLeft: 10
+    paddingLeft: 10,
   },
-  TextInputPassword:{
+  TextInputPassword: {
     marginBottom: 15,
     borderWidth: 1,
-    borderRadius:12,
+    borderRadius: 12,
     marginHorizontal: 20,
     borderColor: 'rgb(70,85,31)',
     flexDirection: 'row',
     color: colors.input,
     justifyContent: 'space-between',
-    alignItemsContent:  'center',
-    alignItems: 'center'
+    alignItemsContent: 'center',
+    alignItems: 'center',
   },
   label: {
     fontSize: 16,
@@ -227,5 +290,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-})
+});
 export default SignUpScreen;
