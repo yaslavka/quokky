@@ -10,7 +10,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import dayjs from 'dayjs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import './src/localization/i18n';
 import configureStore from './src/config/store';
 import {PersistGate} from 'redux-persist/integration/react';
@@ -24,7 +24,7 @@ const ReduxProvider = () => {
     <Provider store={store.store}>
       <PersistGate loading={null} persistor={store.persistor}>
         <SafeAreaProvider>
-            <App />
+          <App />
         </SafeAreaProvider>
       </PersistGate>
     </Provider>

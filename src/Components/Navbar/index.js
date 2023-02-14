@@ -3,12 +3,10 @@ import {createDrawerNavigator} from '@react-navigation/drawer';
 import TabNavigator from '../TabNavigation';
 import Svg, {Path} from 'react-native-svg';
 import KurerScreen from '../../screens/KurerScreen';
-import KurersScreen from '../../screens/KurersScreen';
 import PaymentsScreen from '../../screens/PaymentsScreen';
 import SettingScreen from '../../screens/SetingScreen';
 import HelpScreen from '../../screens/HelpScreen';
 import DrawerContent from '../DrawerContent';
-import MapScreen from '../../screens/MapScreen';
 import MessagesScreen from '../../screens/MessagesScreen';
 
 const Drawer = createDrawerNavigator();

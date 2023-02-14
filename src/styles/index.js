@@ -6,7 +6,7 @@ export const colors = {
   input: 'rgb(7,7,7)',
   border: 'rgb(70,85,31)',
   button: 'rgb(70,85,31)',
-  placeholder: 'rgb(70,85,31)',
+  placeholder: 'rgba(128, 136, 77, 1)',
   cardComments: 'rgb(70,85,31)',
   cardBackab: 'rgb(70,85,31)',
   menu: '#fff',

@@ -8,6 +8,7 @@ import Navbar from './src/Components/Navbar';
 import SignUpScreen from './src/screens/SignUpScreen';
 import MapScreen from './src/screens/MapScreen';
 import ZakazScreen from './src/screens/DestinationScreen';
+import GlavnyScreen from './src/screens/GlavnyScreen';
 // import DestinationScreen from "./src/screens/DestinationScreen";
 const Stack = createNativeStackNavigator();
 const RootStack = createNativeStackNavigator();
@@ -42,6 +43,11 @@ const App = () => {
           </RootStack.Navigator>
         ) : (
           <Stack.Navigator>
+            <Stack.Screen
+              name="Authh"
+              component={GlavnyScreen}
+              options={{headerShown: false}}
+            />
             <Stack.Screen
               name="Auth"
               component={SignInScreen}

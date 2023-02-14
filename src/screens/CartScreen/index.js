@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,6 @@ import {useTranslation} from 'react-i18next';
 import Svg, {Path} from 'react-native-svg';
 import {colors} from '../../styles';
 import {useNavigation} from '@react-navigation/native';
-import {useDispatch} from 'react-redux';
-import {matrixActions} from '../../store/zakaz/actions';
 function CartScreen() {
   const navigation = useNavigation();
   const [zakaz, setZakaz] = useState();
@@ -48,7 +46,7 @@ function CartScreen() {
               <>
                 <TouchableOpacity
                   onPress={() => {
-                    navigation.navigate('Map', {id: item.id})
+                    navigation.navigate('Map', {id: item.id});
                   }}>
                   <View
                     style={{
